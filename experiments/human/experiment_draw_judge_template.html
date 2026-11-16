@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moving Ball Study</title>
+<style>
+  :root { --bg:#F6F3EC; --ink:#1C2430; --muted:#5D6573; --accent:#2E5A87; --line:#DDD6C9; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:18px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width:760px; margin:0 auto; padding:24px 16px 48px; }
+  h1 { font-size:28px; margin:0 0 12px; }
+  p { margin:0 0 12px; }
+  .screen { display:none; } .screen.on { display:block; }
+  canvas { display:block; width:100%; max-width:720px; aspect-ratio:3/2; border:1px solid var(--line);
+           border-radius:8px; touch-action:none; background:#F2F2F2; }
+  .row { display:flex; gap:12px; flex-wrap:wrap; margin-top:14px; align-items:center; }
+  button { font:inherit; padding:10px 18px; border-radius:8px; border:1px solid var(--accent); background:var(--accent);
+           color:#fff; cursor:pointer; }
+  button.ghost { background:transparent; color:var(--accent); }
+  button:disabled { opacity:.4; cursor:default; }
+  label { display:block; margin:10px 0 4px; }
+  input, select { font:inherit; padding:8px; border:1px solid var(--line); border-radius:6px; width:100%; max-width:340px; }
+  .muted { color:var(--muted); font-size:15px; }
+  .prog { color:var(--muted); font-size:15px; margin-bottom:8px; }
+  .msg { min-height:27px; color:var(--accent); font-weight:600; }
+</style>
+</head>
+<body>
+<main>
+
+<section class="screen on" id="s-welcome">
+  <h1>Moving ball study</h1>
+  <p>You will watch a small red ball move through a tube lying flat on a table, seen from above, and say what happens next. It takes about 12 minutes. There are no trick questions: answer with your first impression.</p>
+  <p class="muted">No personal data is collected beyond the answers below. Your answers are saved to a file on this computer at the end.</p>
+  <label for="pid">Participant number (given by the experimenter)</label>
+  <input id="pid" inputmode="numeric" placeholder="e.g. 7">
+  <label for="age">Age</label>
+  <input id="age" inputmode="numeric">
+  <label for="physics">Physics training</label>
+  <select id="physics">
+    <option value="">choose…</option>
+    <option value="none">None</option>
+    <option value="high_school">High school</option>
+    <option value="university">At least one university course</option>
+  </select>
+  <label for="gender">Gender (optional)</label>
+  <select id="gender">
+    <option value="">prefer not to say</option><option value="woman">Woman</option><option value="man">Man</option><option value="other">Other</option>
+  </select>
+  <div class="row"><button id="b-start">Start</button><span class="msg" id="m-welcome"></span></div>
+</section>
+
+<section class="screen" id="s-draw-intro">
+  <h1>Part 1 of 2 · Draw the path</h1>
+  <p>Each time, a ball goes through a curved (or straight) tube lying flat on a table. You see either <b>the ball moving</b> through the tube, or <b>a single picture</b>. Both stop just before the ball comes out.</p>
+  <p>Then <b>draw the path the ball will follow when it comes out of the tube</b>: press on the ball and drag, as far as the edge of the picture. Nothing pushes or pulls the ball once it is out. Use <i>Redo</i> to try again, then <i>Next</i>.</p>
+  <p class="muted">30 drawings.</p>
+  <div class="row"><button id="b-draw-go">Begin part 1</button></div>
+</section>
+
+<section class="screen" id="s-draw">
+  <div class="prog" id="p-draw"></div>
+  <p id="t-draw"></p>
+  <canvas id="c-draw" width="480" height="320"></canvas>
+  <div class="row">
+    <button class="ghost" id="b-replay">Watch again</button>
+    <button class="ghost" id="b-redo">Redo</button>
+    <button id="b-next" disabled>Next</button>
+    <span class="msg" id="m-draw"></span>
+  </div>
+</section>
+
+<section class="screen" id="s-judge-intro">
+  <h1>Part 2 of 2 · Which looks natural?</h1>
+  <p>Now each tube is shown twice, as <b>version 1</b> and <b>version 2</b>. They are the same until the ball comes out of the tube, then the ball moves differently.</p>
+  <p>Choose the version in which the ball moves <b>the way a real ball would</b>. You can replay them.</p>
+  <p class="muted">30 choices.</p>
+  <div class="row"><button id="b-judge-go">Begin part 2</button></div>
+</section>
+
+<section class="screen" id="s-judge">
+  <div class="prog" id="p-judge"></div>
+  <p id="t-judge"></p>
+  <canvas id="c-judge" width="480" height="320"></canvas>
+  <div class="row">
+    <button class="ghost" id="b-play">Play both again</button>
+    <button id="b-v1" disabled>Version 1 looks natural</button>
+    <button id="b-v2" disabled>Version 2 looks natural</button>
+  </div>
+</section>
+
+<section class="screen" id="s-end">
+  <h1>Thank you</h1>
+  <p>Your answers were saved as <b id="fname"></b> in your downloads folder. Please give that file to the experimenter.</p>
+  <div class="row"><button id="b-save">Download the file again</button></div>
+</section>
+
+</main>
+<script>
+const ITEMS = /*ITEMS*/[];
+const FPS = 16, W = 480, H = 320, BALL_R = 7;
+const BG = "rgb(242,242,242)", WALL = "rgb(120,120,120)", BALL = "rgb(230,30,30)";
+const $ = id => document.getElementById(id);
+const show = id => { document.querySelectorAll(".screen").forEach(s => s.classList.remove("on")); $(id).classList.add("on"); window.scrollTo(0, 0); };
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// ---------- seeded random, so each participant number gives a fixed order
+function rng(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s ^= s >>> 17; s ^= s << 5; return ((s >>> 0) % 1e9) / 1e9; }; }
+function shuffle(a, r) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+// ---------- drawing the scene exactly as the model stimuli
+function walls(line, hw) {
+  const a = [], b = [];
+  for (let i = 0; i < line.length; i++) {
+    const p = line[Math.max(0, i - 1)], q = line[Math.min(line.length - 1, i + 1)];
+    let dx = q[0] - p[0], dy = q[1] - p[1]; const n = Math.hypot(dx, dy) || 1; dx /= n; dy /= n;
+    a.push([line[i][0] - hw * dy, line[i][1] + hw * dx]); b.push([line[i][0] + hw * dy, line[i][1] - hw * dx]);
+  }
+  return [a, b];
+}
+function frame(ctx, it, path, f) {
+  ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = WALL; ctx.lineWidth = 3; ctx.lineJoin = "round";
+  for (const w of (it._walls ||= walls(it.line, it.hw))) {
+    ctx.beginPath(); w.forEach((p, i) => i ? ctx.lineTo(...p) : ctx.moveTo(...p)); ctx.stroke();
+  }
+  const p = path[f];
+  if (p) { ctx.fillStyle = BALL; ctx.beginPath(); ctx.arc(p[0], p[1], BALL_R, 0, 2 * Math.PI); ctx.fill(); }
+}
+async function play(ctx, it, path, f0, f1, token) {
+  for (let f = f0; f <= f1; f++) { if (token.stop) return false; frame(ctx, it, path, f); await sleep(1000 / FPS); }
+  return true;
+}
+
+// ---------- session
+let P = {}, rows = [], plan = [];
+function csvCell(v) { v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+function toCSV() {
+  const cols = ["participant", "age", "physics", "gender", "trial", "task", "item_id", "shape", "speed", "mode",
+                "drawn_xy", "correct_version", "choice", "chose_curving", "replays", "rt_ms", "time"];
+  return [cols.join(",")].concat(rows.map(r => cols.map(c => csvCell(r[c])).join(","))).join("\n");
+}
+function backup() { try { localStorage.setItem("slide21_" + P.participant, toCSV()); } catch (e) {} }
+function download() {
+  const name = `slide21_humans_p${P.participant}_${new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-")}.csv`;
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([toCSV()], { type: "text/csv" })); a.download = name; a.click();
+  $("fname").textContent = name;
+}
+
+$("b-start").onclick = () => {
+  const pid = parseInt($("pid").value, 10);
+  if (!(pid >= 0)) { $("m-welcome").textContent = "Please enter the participant number."; return; }
+  if (!$("physics").value) { $("m-welcome").textContent = "Please choose your physics training."; return; }
+  P = { participant: pid, age: $("age").value, physics: $("physics").value, gender: $("gender").value };
+  // half the tubes as a moving clip, half as a still; swapped for odd/even participant numbers
+  const r = rng(1000 + pid);
+  const modes = {};
+  const byCell = {};
+  ITEMS.forEach(it => (byCell[it.shape + it.speed] ||= []).push(it));
+  Object.values(byCell).forEach(list => list.forEach((it, i) => { modes[it.id] = (i + pid + (it.speed === 200 ? 1 : 0)) % 2 ? "clip" : "still"; }));
+  plan = { modes, draw: shuffle(ITEMS, r), judge: shuffle(ITEMS, r), versions: ITEMS.map(() => (r() < 0.5 ? 1 : 2)) };
+  show("s-draw-intro");
+};
+
+// ---------- part 1: draw
+const cd = $("c-draw"), xd = cd.getContext("2d");
+let di = 0, drawn = [], drawing = false, token = { stop: false }, replays = 0, t0 = 0, ready = false;
+$("b-draw-go").onclick = () => { show("s-draw"); drawTrial(); };
+function lastFrame(it, mode) { return it.ctx_end; }   // clip and still both stop 1 frame before the ball leaves the tube
+function redraw(it, mode) {
+  frame(xd, it, it.ball, lastFrame(it, mode));
+  if (drawn.length > 1) {
+    xd.strokeStyle = "rgb(30,30,30)"; xd.lineWidth = 2.5; xd.setLineDash([]);
+    xd.beginPath(); drawn.forEach((p, i) => i ? xd.lineTo(...p) : xd.moveTo(...p)); xd.stroke();
+  }
+}
+async function showStim(it, mode) {
+  ready = false; token.stop = true; token = { stop: false }; const me = token;
+  $("b-replay").style.display = mode === "clip" ? "" : "none";
+  if (mode === "clip") {
+    $("t-draw").textContent = "Watch the ball move through the tube.";
+    if (!(await play(xd, it, it.ball, 0, it.ctx_end, me))) return;
+  }
+  if (me !== token) return;
+  drawn = []; redraw(it, mode); ready = true;
+  $("t-draw").textContent = "The ball is about to leave the tube. Press on the ball and draw the path it will follow after it comes out.";
+}
+function drawTrial() {
+  const it = plan.draw[di], mode = plan.modes[it.id];
+  $("p-draw").textContent = `Drawing ${di + 1} of ${plan.draw.length}`;
+  $("b-next").disabled = true; $("m-draw").textContent = ""; replays = 0; drawn = [];
+  showStim(it, mode); t0 = performance.now();
+}
+function pt(ev, c) { const b = c.getBoundingClientRect(); return [(ev.clientX - b.left) * W / b.width, (ev.clientY - b.top) * H / b.height]; }
+cd.addEventListener("pointerdown", ev => {
+  if (!ready) return;
+  const it = plan.draw[di], b = it.ball[lastFrame(it, plan.modes[it.id])], p = pt(ev, cd);
+  if (Math.hypot(p[0] - b[0], p[1] - b[1]) > 30) { $("m-draw").textContent = "Start on the red ball."; return; }
+  drawing = true; drawn = [b.slice(), p]; cd.setPointerCapture(ev.pointerId); $("m-draw").textContent = "";
+});
+cd.addEventListener("pointermove", ev => {
+  if (!drawing) return; const p = pt(ev, cd), q = drawn[drawn.length - 1];
+  if (Math.hypot(p[0] - q[0], p[1] - q[1]) >= 3) { drawn.push(p); const it = plan.draw[di]; redraw(it, plan.modes[it.id]); }
+});
+const endDraw = () => {
+  if (!drawing) return; drawing = false;
+  let len = 0; for (let i = 1; i < drawn.length; i++) len += Math.hypot(drawn[i][0] - drawn[i - 1][0], drawn[i][1] - drawn[i - 1][1]);
+  if (len < 60) { $("m-draw").textContent = "Draw a longer path, towards the edge of the picture."; drawn = []; const it = plan.draw[di]; redraw(it, plan.modes[it.id]); return; }
+  $("b-next").disabled = false;
+};
+cd.addEventListener("pointerup", endDraw); cd.addEventListener("pointercancel", endDraw);
+$("b-redo").onclick = () => { if (!ready) return; drawn = []; $("b-next").disabled = true; const it = plan.draw[di]; redraw(it, plan.modes[it.id]); };
+$("b-replay").onclick = () => { const it = plan.draw[di]; replays++; $("b-next").disabled = true; showStim(it, plan.modes[it.id]); };
+$("b-next").onclick = () => {
+  const it = plan.draw[di];
+  rows.push({ ...P, trial: rows.length + 1, task: "draw", item_id: it.id, shape: it.shape, speed: it.speed, mode: plan.modes[it.id],
+              drawn_xy: JSON.stringify(drawn.map(p => [Math.round(p[0] * 10) / 10, Math.round(p[1] * 10) / 10])),
+              replays, rt_ms: Math.round(performance.now() - t0), time: new Date().toISOString() });
+  backup(); di++;
+  if (di < plan.draw.length) drawTrial(); else show("s-judge-intro");
+};
+
+// ---------- part 2: which looks natural
+const cj = $("c-judge"), xj = cj.getContext("2d");
+let ji = 0, jt0 = 0, jreplays = -1;
+$("b-judge-go").onclick = () => { show("s-judge"); judgeTrial(); };
+async function playBoth() {
+  token.stop = true; token = { stop: false }; const me = token; jreplays++;
+  $("b-v1").disabled = $("b-v2").disabled = true;
+  const it = plan.judge[ji], mode = plan.modes[it.id], cv = plan.versions[ITEMS.indexOf(it)];
+  const paths = cv === 1 ? [it.ball, it.imp] : [it.imp, it.ball], last = it.ball.length - 1;
+  for (let v = 0; v < 2; v++) {
+    $("t-judge").textContent = `Version ${v + 1}`;
+    if (mode === "clip") { if (!(await play(xj, it, paths[v], 0, it.ctx_end, me))) return; }
+    else { frame(xj, it, paths[v], it.ctx_end); await sleep(1000); if (me !== token) return; }
+    if (!(await play(xj, it, paths[v], it.ctx_end + 1, last, me))) return;
+    await sleep(700); if (me !== token) return;
+  }
+  $("t-judge").textContent = "Which version looks the way a real ball would move?";
+  $("b-v1").disabled = $("b-v2").disabled = false;
+}
+function judgeTrial() { $("p-judge").textContent = `Choice ${ji + 1} of ${plan.judge.length}`; jreplays = -1; jt0 = performance.now(); playBoth(); }
+$("b-play").onclick = playBoth;
+function choose(v) {
+  const it = plan.judge[ji], cv = plan.versions[ITEMS.indexOf(it)];
+  rows.push({ ...P, trial: rows.length + 1, task: "judge", item_id: it.id, shape: it.shape, speed: it.speed, mode: plan.modes[it.id],
+              correct_version: cv, choice: v, chose_curving: v === cv ? 0 : 1, replays: jreplays,
+              rt_ms: Math.round(performance.now() - jt0), time: new Date().toISOString() });
+  backup(); ji++;
+  if (ji < plan.judge.length) judgeTrial(); else { download(); show("s-end"); }
+}
+$("b-v1").onclick = () => choose(1); $("b-v2").onclick = () => choose(2);
+$("b-save").onclick = download;
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+diffusers>=0.35
+transformers
+accelerate
+ftfy
+imageio
+imageio-ffmpeg
+sentencepiece

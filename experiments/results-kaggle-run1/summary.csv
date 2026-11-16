@@ -1,0 +1,21 @@
+model,readout,shape,mode,n_total,n_valid,pct_curving,pct_no_bias,pct_centrifugal,pct_invalid
+LTX-Video,generate,c180,clip,12,11,45.5,36.4,18.2,8.3
+LTX-Video,generate,c180,still,12,7,71.4,28.6,0.0,41.7
+LTX-Video,generate,c270,clip,12,12,66.7,25.0,8.3,0.0
+LTX-Video,generate,c270,still,12,5,80.0,0.0,20.0,58.3
+LTX-Video,generate,c90,clip,12,11,72.7,9.1,18.2,8.3
+LTX-Video,generate,c90,still,12,3,66.7,33.3,0.0,75.0
+LTX-Video,generate,spiral,clip,12,12,50.0,25.0,25.0,0.0
+LTX-Video,generate,spiral,still,12,6,50.0,33.3,16.7,50.0
+LTX-Video,generate,straight,clip,12,11,9.1,81.8,9.1,8.3
+LTX-Video,generate,straight,still,12,3,33.3,33.3,33.3,75.0
+V-JEPA 2,judge,c180,clip,6,6,100.0,,,0
+V-JEPA 2,judge,c180,still,6,6,100.0,,,0
+V-JEPA 2,judge,c270,clip,6,6,50.0,,,0
+V-JEPA 2,judge,c270,still,6,6,33.3,,,0
+V-JEPA 2,judge,c90,clip,6,6,100.0,,,0
+V-JEPA 2,judge,c90,still,6,6,100.0,,,0
+V-JEPA 2,judge,spiral,clip,6,6,33.3,,,0
+V-JEPA 2,judge,spiral,still,6,6,33.3,,,0
+V-JEPA 2,judge,straight,clip,6,6,50.0,,,0
+V-JEPA 2,judge,straight,still,6,6,66.7,,,0

@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.DS_Store
+.env
+*.key
+# generated outputs and model weights
+out/
+out.zip
+hf/
+*.safetensors
+*.ckpt
+*.pt
+*.bin
+stimuli_2d/
+docs/ccn-abstract/src/_build/
+experiments/human/data/*.csv

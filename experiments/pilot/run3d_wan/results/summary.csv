@@ -1,0 +1,6 @@
+model,readout,shape,mode,n_total,n_valid,pct_curving,pct_no_bias,pct_centrifugal,n_degraded,n_stopped,n_lost
+wan,generate,c180,still,1,1,100.0,0.0,0.0,0,0,0
+wan,generate,c270,still,1,0,,,,1,0,0
+wan,generate,c90,still,1,1,100.0,0.0,0.0,0,0,0
+wan,generate,spiral,still,1,1,100.0,0.0,0.0,0,0,0
+wan,generate,straight,still,1,0,,,,0,1,0

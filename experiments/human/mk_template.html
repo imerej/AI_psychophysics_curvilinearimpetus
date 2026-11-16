@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Curved tube problem</title>
+<style>
+  :root { --bg: #fafafa; --fg: #1d1d1f; --muted: #666; --accent: #2457c5; --line: #ccc; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 17px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .screen { display: none; max-width: 980px; margin: 0 auto; padding: 24px 16px 48px; }
+  .screen.on { display: block; }
+  h1 { font-size: 24px; margin: 0 0 16px; }
+  p { margin: 0 0 12px; }
+  .muted { color: var(--muted); font-size: 15px; }
+  label { display: block; margin: 12px 0 4px; font-weight: 600; }
+  input[type=number], input[type=text], select { font: inherit; padding: 6px 8px; width: 260px; max-width: 100%; }
+  button { font: inherit; padding: 10px 22px; margin: 16px 8px 0 0; border: 0; border-radius: 6px; background: var(--accent); color: #fff; cursor: pointer; }
+  button:disabled { background: #aab; cursor: default; }
+  button.ghost { background: #e4e4ea; color: var(--fg); }
+  .problem { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  canvas { display: block; margin: 0 auto; background: rgb(242,242,242); touch-action: manipulation; }
+  .center { text-align: center; }
+  #cal-rect { background: #2457c5; border-radius: 3px; margin: 16px 0; }
+  #cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 16px; }
+  .card { background: #fff; border: 3px solid var(--line); border-radius: 8px; padding: 8px; cursor: pointer; text-align: center; }
+  .card.sel { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(36,87,197,.25); }
+  .card canvas { width: 100%; height: auto; }
+  .card .num { font-size: 14px; color: var(--muted); margin-top: 4px; }
+  .choice-row label { display: inline-block; font-weight: normal; margin-right: 18px; }
+  #traj-count { font-size: 15px; color: var(--muted); text-align: center; margin-bottom: 8px; }
+  @media (max-width: 640px) { #cards { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+
+<!-- 0. experimenter setup -->
+<div class="screen on" id="s-setup">
+  <h1>Setup (experimenter)</h1>
+  <label>Language / Langue</label>
+  <select id="f-lang"><option value="en">English</option><option value="fr">Français</option></select>
+  <label>Participant number</label>
+  <input type="number" id="f-pid" min="1" step="1">
+  <label>Condition</label>
+  <select id="f-cond">
+    <option value="auto">Automatic (odd = no motion, even = trajectories)</option>
+    <option value="no_motion">No motion</option>
+    <option value="trajectories">Trajectories</option>
+  </select>
+  <label>Physics training</label>
+  <select id="f-phys">
+    <option value="">choose</option>
+    <option value="none">None</option>
+    <option value="high_school">High school</option>
+    <option value="college">University</option>
+  </select>
+  <label>Age</label>
+  <input type="number" id="f-age" min="10" max="99">
+  <label>Gender (optional)</label>
+  <select id="f-gender"><option value="">not given</option><option value="woman">Woman</option><option value="man">Man</option><option value="other">Other</option></select>
+  <p class="muted" style="margin-top:16px">McCloskey &amp; Kohl (1983, Exp. 2) ran 36 people per condition: 12 with no physics, 12 with high-school physics and 12 with university physics, 6 women and 6 men in each. Number participants 1, 2, 3, … within each physics level so the automatic condition splits them evenly.</p>
+  <button id="b-setup">Start</button>
+</div>
+
+<!-- 1. screen calibration -->
+<div class="screen" id="s-cal">
+  <h1 data-t="cal_h"></h1>
+  <p data-t="cal_p"></p>
+  <input type="range" id="cal-slider" min="20" max="90" step="0.1" value="37.8" style="width:100%">
+  <div id="cal-rect"></div>
+  <button id="b-cal" data-t="cal_ok"></button>
+  <button class="ghost" id="b-nocard" data-t="cal_no"></button>
+</div>
+
+<!-- 2. viewing distance -->
+<div class="screen" id="s-dist">
+  <h1 data-t="dist_h"></h1>
+  <p data-t="dist_p"></p>
+  <button id="b-dist" data-t="next"></button>
+</div>
+
+<!-- 3. the problem -->
+<div class="screen" id="s-problem">
+  <h1 data-t="prob_h"></h1>
+  <canvas id="c-problem"></canvas>
+  <div class="problem">
+    <p data-t="prob_text"></p>
+    <p data-t="prob_task"></p>
+  </div>
+  <button id="b-problem" data-t="next"></button>
+</div>
+
+<!-- 4. top-view check -->
+<div class="screen" id="s-check">
+  <h1 data-t="check_h"></h1>
+  <p data-t="check_q"></p>
+  <div class="choice-row">
+    <label><input type="radio" name="view" value="side"> <span data-t="check_side"></span></label>
+    <label><input type="radio" name="view" value="top"> <span data-t="check_top"></span></label>
+  </div>
+  <p id="check-msg" style="color:#b3261e;display:none" data-t="check_wrong"></p>
+  <button id="b-check" data-t="next"></button>
+</div>
+
+<!-- 5. trajectories intro -->
+<div class="screen" id="s-traj-intro">
+  <h1 data-t="ti_h"></h1>
+  <p data-t="ti_p"></p>
+  <button id="b-traj-intro" data-t="next"></button>
+</div>
+
+<!-- 6. one trajectory -->
+<div class="screen" id="s-traj">
+  <div id="traj-count"></div>
+  <canvas id="c-traj"></canvas>
+  <div class="center">
+    <button id="b-play" data-t="play"></button>
+    <button id="b-traj-next" data-t="next" disabled></button>
+  </div>
+</div>
+
+<!-- 7. choose a card -->
+<div class="screen" id="s-choose">
+  <h1 data-t="ch_h"></h1>
+  <p data-t="ch_p"></p>
+  <div id="cards"></div>
+  <button id="b-choose" data-t="confirm" disabled></button>
+</div>
+
+<!-- 8. end -->
+<div class="screen" id="s-end">
+  <h1 data-t="end_h"></h1>
+  <p data-t="end_p"></p>
+  <p class="muted" id="fname"></p>
+  <button class="ghost" id="b-save" data-t="save_again"></button>
+</div>
+
+<script>
+"use strict";
+const D = /*DATA*/{};
+
+const T = {
+  en: {
+    cal_h: "Screen size",
+    cal_p: "Hold a bank card (or any card of that size) against the screen and move the slider until the blue rectangle is exactly the size of the card.",
+    cal_ok: "It matches", cal_no: "I have no card",
+    dist_h: "Sitting position",
+    dist_p: "Please sit at about arm's length from the screen (about 45 cm) and keep roughly that distance until the end.",
+    next: "Next", play: "Start", confirm: "Confirm my choice", save_again: "Download the file again",
+    prob_h: "The problem",
+    prob_text: "The diagram shows a thin curved metal tube. In the diagram, you are looking down on the tube. In other words, the tube is lying flat. A metal ball is put into the end of the tube indicated by the arrow and is shot out of the other end of the tube at high speed.",
+    prob_task: "What path will the ball follow after it comes out of the tube? Ignore air resistance and any spin the ball might have. You will choose your answer among six possible paths.",
+    check_h: "Before you answer",
+    check_q: "In the diagram, are you looking at the tube from the side, or from above (the tube lying flat on a table)?",
+    check_side: "From the side", check_top: "From above, the tube is lying flat",
+    check_wrong: "Not quite: you are looking down on the tube from above. The tube is lying flat, like on a table, so gravity does not pull the ball across the picture. Please read the problem again.",
+    ti_h: "Six possible paths",
+    ti_p: "You will now see six possible paths that the ball could follow after it comes out of the tube. Each one is shown as a moving ball, and then as a picture. After you have seen all six, each one is shown once more. Press Start (or the space bar) to play each one. Then you will choose the path you think is correct.",
+    traj_n: (i, n) => `Path ${i} of ${n}`,
+    ch_h: "Your answer",
+    ch_p: "Which path will the ball follow after it comes out of the tube? Click on the card that shows it, then confirm.",
+    card: (i) => `Card ${i}`,
+    end_h: "Thank you",
+    end_p: "Your answer has been saved in your downloads folder. Please give the file to the experimenter.",
+  },
+  fr: {
+    cal_h: "Taille de l'écran",
+    cal_p: "Posez une carte bancaire (ou toute carte de ce format) contre l'écran et déplacez le curseur jusqu'à ce que le rectangle bleu ait exactement la taille de la carte.",
+    cal_ok: "C'est la bonne taille", cal_no: "Je n'ai pas de carte",
+    dist_h: "Position",
+    dist_p: "Asseyez-vous à environ une longueur de bras de l'écran (environ 45 cm) et gardez à peu près cette distance jusqu'à la fin.",
+    next: "Suivant", play: "Lancer", confirm: "Valider mon choix", save_again: "Télécharger le fichier à nouveau",
+    prob_h: "Le problème",
+    prob_text: "Le schéma montre un tube de métal fin et courbé. Sur le schéma, vous regardez le tube d'en haut. Autrement dit, le tube est posé à plat. Une bille de métal est placée dans l'extrémité du tube indiquée par la flèche et elle est projetée à grande vitesse par l'autre extrémité du tube.",
+    prob_task: "Quelle trajectoire la bille suivra-t-elle après sa sortie du tube ? Ne tenez pas compte de la résistance de l'air ni d'une éventuelle rotation de la bille. Vous choisirez votre réponse parmi six trajectoires possibles.",
+    check_h: "Avant de répondre",
+    check_q: "Sur le schéma, voyez-vous le tube de côté, ou d'en haut (le tube posé à plat sur une table) ?",
+    check_side: "De côté", check_top: "D'en haut, le tube est posé à plat",
+    check_wrong: "Pas tout à fait : vous regardez le tube d'en haut. Le tube est posé à plat, comme sur une table, donc la pesanteur ne tire pas la bille à travers l'image. Relisez le problème, s'il vous plaît.",
+    ti_h: "Six trajectoires possibles",
+    ti_p: "Vous allez voir six trajectoires que la bille pourrait suivre après sa sortie du tube. Chacune est montrée avec une bille en mouvement, puis sous forme d'image. Une fois les six vues, chacune est montrée une seconde fois. Appuyez sur Lancer (ou sur la barre d'espace) pour lancer chacune. Vous choisirez ensuite la trajectoire qui vous paraît correcte.",
+    traj_n: (i, n) => `Trajectoire ${i} sur ${n}`,
+    ch_h: "Votre réponse",
+    ch_p: "Quelle trajectoire la bille suivra-t-elle après sa sortie du tube ? Cliquez sur la carte qui la montre, puis validez.",
+    card: (i) => `Carte ${i}`,
+    end_h: "Merci",
+    end_p: "Votre réponse a été enregistrée dans votre dossier de téléchargements. Merci de remettre le fichier à l'expérimentateur.",
+  },
+};
+
+const BG = "rgb(242,242,242)", WALL = "rgb(120,120,120)", BALL = "rgb(230,30,30)", PATH = "rgb(30,30,30)";
+const $ = (id) => document.getElementById(id);
+const P = {};             // participant record
+let L = T.en;
+
+function show(id) {
+  document.querySelectorAll(".screen").forEach((s) => s.classList.toggle("on", s.id === id));
+  window.scrollTo(0, 0);
+}
+function applyLang() {
+  L = T[P.lang] || T.en;
+  document.documentElement.lang = P.lang;
+  document.querySelectorAll("[data-t]").forEach((el) => { el.textContent = L[el.dataset.t]; });
+}
+
+// seeded shuffles, so a participant number always gives the same orders
+function rng(seed) {
+  let s = seed >>> 0;
+  return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function shuffle(a, r) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+// ---------- drawing ----------
+// the field (15 x 15 cm in the original) is D.field_px scene units square
+function fieldCssPx(maxW) {
+  const want = D.field_cm * P.px_per_cm;
+  const room = Math.min(maxW, window.innerHeight - 170);
+  return Math.max(200, Math.min(want, room));
+}
+function setupCanvas(cv, css) {
+  const dpr = window.devicePixelRatio || 1;
+  cv.style.width = css + "px"; cv.style.height = css + "px";
+  cv.width = Math.round(css * dpr); cv.height = Math.round(css * dpr);
+  const ctx = cv.getContext("2d");
+  const k = (css * dpr) / D.field_px;
+  ctx.setTransform(k, 0, 0, k, 0, 0);
+  return ctx;
+}
+function poly(ctx, pts) { ctx.beginPath(); pts.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.stroke(); }
+function drawTube(ctx) {
+  ctx.fillStyle = BG; ctx.fillRect(0, 0, D.field_px, D.field_px);
+  ctx.strokeStyle = WALL; ctx.lineWidth = 3; ctx.lineCap = "round"; ctx.lineJoin = "round";
+  D.walls.forEach((w) => poly(ctx, w));
+  // the two ends of the tube are open; close neither
+}
+function drawArrow(ctx) {
+  const [ex, ey] = D.entry, [dx, dy] = D.entry_dir;
+  const tip = [ex - dx * 4, ey - dy * 4], tail = [ex - dx * 30, ey - dy * 30];
+  ctx.strokeStyle = PATH; ctx.fillStyle = PATH; ctx.lineWidth = 2.5;
+  poly(ctx, [tail, tip]);
+  const a = Math.atan2(dy, dx), h = 8;
+  ctx.beginPath(); ctx.moveTo(tip[0], tip[1]);
+  ctx.lineTo(tip[0] - h * Math.cos(a - 0.45), tip[1] - h * Math.sin(a - 0.45));
+  ctx.lineTo(tip[0] - h * Math.cos(a + 0.45), tip[1] - h * Math.sin(a + 0.45));
+  ctx.closePath(); ctx.fill();
+}
+function drawPath(ctx, alt) {
+  ctx.strokeStyle = PATH; ctx.lineWidth = 2.5; ctx.setLineDash([]);
+  poly(ctx, D.alternatives[alt].line);
+}
+function drawBall(ctx, p) {
+  ctx.fillStyle = BALL; ctx.beginPath(); ctx.arc(p[0], p[1], D.ball_r, 0, 2 * Math.PI); ctx.fill();
+}
+
+// ---------- flow ----------
+$("b-setup").onclick = () => {
+  const pid = parseInt($("f-pid").value, 10);
+  if (!(pid >= 1)) { alert("Enter a participant number (1, 2, 3, ...)."); return; }
+  if (!$("f-phys").value) { alert("Choose the physics training."); return; }
+  P.participant = pid;
+  P.lang = $("f-lang").value;
+  P.condition = $("f-cond").value === "auto" ? (pid % 2 ? "no_motion" : "trajectories") : $("f-cond").value;
+  P.physics = $("f-phys").value; P.age = $("f-age").value; P.gender = $("f-gender").value;
+  const r = rng(7919 * pid + 17);
+  P.trajectory_order = shuffle([..."ABCDEF"], r);
+  P.card_order = shuffle([..."ABCDEF"], r);
+  P.check_attempts = 0; P.t0 = performance.now(); P.start = new Date().toISOString();
+  applyLang();
+  calSet(parseFloat($("cal-slider").value));
+  show("s-cal");
+};
+
+function calSet(v) { P.px_per_cm = v; $("cal-rect").style.width = 8.56 * v + "px"; $("cal-rect").style.height = 5.398 * v + "px"; }
+$("cal-slider").oninput = (e) => calSet(parseFloat(e.target.value));
+$("b-cal").onclick = () => { P.calibrated = 1; show("s-dist"); };
+$("b-nocard").onclick = () => { P.calibrated = 0; P.px_per_cm = 96 / 2.54; show("s-dist"); };
+
+$("b-dist").onclick = () => showProblem();
+function showProblem() {
+  const css = fieldCssPx(Math.min(window.innerWidth - 32, 948));
+  P.field_cm_shown = +(css / P.px_per_cm).toFixed(2);
+  const ctx = setupCanvas($("c-problem"), css);
+  drawTube(ctx); drawArrow(ctx);
+  show("s-problem");
+}
+$("b-problem").onclick = () => {
+  document.querySelectorAll("input[name=view]").forEach((x) => { x.checked = false; });
+  $("check-msg").style.display = "none";
+  show("s-check");
+};
+$("b-check").onclick = () => {
+  const v = document.querySelector("input[name=view]:checked");
+  if (!v) return;
+  P.check_attempts++;
+  if (v.value !== "top") { $("check-msg").style.display = "block"; setTimeout(showProblem, 2500); return; }
+  if (P.condition === "trajectories") show("s-traj-intro"); else showCards();
+};
+
+// trajectories: the six alternatives once, then each once more (repeated in the same order)
+let tj = 0, playing = false;
+const tjList = () => P.trajectory_order.concat(P.trajectory_order);
+$("b-traj-intro").onclick = () => { tj = 0; trajScreen(); };
+function trajScreen() {
+  const css = fieldCssPx(Math.min(window.innerWidth - 32, 948));
+  const ctx = setupCanvas($("c-traj"), css);
+  drawTube(ctx);
+  $("traj-count").textContent = L.traj_n(tj + 1, 12);
+  $("b-play").disabled = false; $("b-traj-next").disabled = true;
+  show("s-traj");
+}
+function play() {
+  if (playing || $("b-play").disabled) return;
+  playing = true; $("b-play").disabled = true;
+  const alt = tjList()[tj], fr = D.alternatives[alt].frames;
+  const ctx = $("c-traj").getContext("2d");
+  const t0 = performance.now();
+  function step(now) {
+    const i = Math.floor(((now - t0) / 1000) * D.fps);
+    drawTube(ctx);
+    if (i < fr.length) { drawBall(ctx, fr[i]); requestAnimationFrame(step); return; }
+    drawPath(ctx, alt);            // static picture of tube + path
+    playing = false;
+    setTimeout(() => { $("b-traj-next").disabled = false; }, 1000);
+  }
+  requestAnimationFrame(step);
+}
+$("b-play").onclick = play;
+document.addEventListener("keydown", (e) => {
+  if (e.code === "Space" && $("s-traj").classList.contains("on")) { e.preventDefault(); play(); }
+});
+$("b-traj-next").onclick = () => { tj++; if (tj < 12) trajScreen(); else showCards(); };
+
+// six cards, laid out in a new random order per participant
+let chosen = null;
+function showCards() {
+  const box = $("cards"); box.innerHTML = ""; chosen = null; $("b-choose").disabled = true;
+  P.card_order.forEach((alt, i) => {
+    const card = document.createElement("div"); card.className = "card"; card.dataset.alt = alt;
+    const cv = document.createElement("canvas"); card.appendChild(cv);
+    const n = document.createElement("div"); n.className = "num"; n.textContent = L.card(i + 1); card.appendChild(n);
+    box.appendChild(card);
+    const ctx = setupCanvas(cv, 300); cv.style.width = "100%"; cv.style.height = "auto";
+    drawTube(ctx); drawArrow(ctx); drawPath(ctx, alt);
+    card.onclick = () => {
+      box.querySelectorAll(".card").forEach((c) => c.classList.toggle("sel", c === card));
+      chosen = { alt, pos: i + 1 }; $("b-choose").disabled = false;
+    };
+  });
+  P.t_cards = performance.now();
+  show("s-choose");
+}
+$("b-choose").onclick = () => {
+  if (!chosen) return;
+  P.choice = chosen.alt; P.card_position = chosen.pos;
+  P.category = D.alternatives[chosen.alt].category;
+  P.rt_choice_ms = Math.round(performance.now() - P.t_cards);
+  P.total_ms = Math.round(performance.now() - P.t0);
+  download(); show("s-end");
+};
+
+// ---------- data ----------
+const COLS = ["participant", "condition", "physics", "age", "gender", "item", "choice", "category", "card_position",
+  "card_order", "trajectory_order", "check_attempts", "px_per_cm", "calibrated", "field_cm_shown", "rt_choice_ms", "total_ms", "time"];
+function toCSV() {
+  const row = Object.assign({}, P, { item: D.item, card_order: P.card_order.join(""),
+    trajectory_order: P.condition === "trajectories" ? P.trajectory_order.join("") : "",
+    px_per_cm: (+P.px_per_cm).toFixed(2), time: P.start });
+  return COLS.join(",") + "\n" + COLS.map((c) => `"${String(row[c] ?? "").replace(/"/g, '""')}"`).join(",") + "\n";
+}
+function fileName() { return `mk_spiral_p${P.participant}_${P.condition}.csv`; }
+function download() {
+  const csv = toCSV();
+  try { localStorage.setItem("mk_spiral_" + P.participant, csv); } catch (e) {}
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = fileName();
+  document.body.appendChild(a); a.click(); a.remove();
+  $("fname").textContent = fileName();
+}
+$("b-save").onclick = download;
+</script>
+</body>
+</html>

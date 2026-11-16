@@ -1,0 +1,6 @@
+shape,n_total,n_valid,pct_curving,pct_straight,pct_outward
+c90,36,32,62.5,25.0,12.5
+c180,36,30,70.0,16.7,13.3
+c270,36,31,77.4,12.9,9.7
+spiral,36,27,59.3,22.2,18.5
+straight,36,24,4.2,95.8,0.0

@@ -1,0 +1,16 @@
+model,readout,shape,mode,n_total,n_valid,pct_curving,pct_no_bias,pct_centrifugal,n_degraded,n_stopped,n_lost
+ltx,generate,c180,clip,36,32,71.9,15.6,12.5,2,2,0
+ltx,generate,c270,clip,36,33,75.8,12.1,12.1,1,1,1
+ltx,generate,c90,clip,36,36,66.7,22.2,11.1,0,0,0
+ltx,generate,spiral,clip,36,32,59.4,21.9,18.8,0,4,0
+ltx,generate,straight,clip,36,30,6.7,93.3,0.0,4,2,0
+vjepa,judge,c180,clip,6,6,0.0,,,,,
+vjepa,judge,c180,still,6,6,0.0,,,,,
+vjepa,judge,c270,clip,6,6,16.7,,,,,
+vjepa,judge,c270,still,6,6,66.7,,,,,
+vjepa,judge,c90,clip,6,6,50.0,,,,,
+vjepa,judge,c90,still,6,6,50.0,,,,,
+vjepa,judge,spiral,clip,6,6,16.7,,,,,
+vjepa,judge,spiral,still,6,6,50.0,,,,,
+vjepa,judge,straight,clip,6,6,66.7,,,,,
+vjepa,judge,straight,still,6,6,66.7,,,,,

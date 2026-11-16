@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Human-like Physics Errors – Study Plan</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
+<style>
+  :root {
+    --red: #a01010; --deep: #7d0c0c; --bg: #f5f3ef; --ink: #2a2826; --muted: #6b6762;
+    --line: #e4dfd8; --beige: #ece6df; --bluebg: #e4eaf2; --blue: #2f5fa7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  @page { size: 1280px 720px; margin: 0; }
+  body { font-family: "Open Sans", Inter, sans-serif; color: var(--ink); background: #888; }
+  .slide { width: 1280px; height: 720px; position: relative; overflow: hidden; background: var(--bg);
+           padding: 72px 72px 0; page-break-after: always; break-after: page; }
+  .slide:last-child { page-break-after: auto; break-after: auto; }
+  .bar { position: absolute; top: 0; left: 0; right: 0; height: 9px; background: #dcd6ce; }
+  .bar i { display: block; height: 100%; background: var(--red); }
+  h2 { color: var(--red); font-size: 44px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 22px; }
+  .lead { font-size: 26px; line-height: 1.42; margin-bottom: 30px; max-width: 1080px; }
+  .lead b { font-weight: 700; }
+  .foot { position: absolute; left: 72px; right: 72px; bottom: 26px; display: flex; justify-content: space-between;
+          font-size: 14px; color: var(--muted); }
+  .row { display: flex; gap: 20px; }
+  .card { flex: 1; background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 20px 22px; }
+  .card h3 { font-size: 19px; font-weight: 700; margin-bottom: 10px; }
+  .card p { font-size: 15.5px; line-height: 1.5; color: #3a3836; }
+  .card p + p { margin-top: 8px; }
+  .panel { flex: 1; border-radius: 8px; padding: 20px 24px; }
+  .panel h3 { font-size: 21px; font-weight: 600; margin-bottom: 8px; }
+  .panel p { font-size: 16px; line-height: 1.5; }
+  .beige { background: var(--beige); } .blue { background: var(--bluebg); }
+  .step h3 { font-size: 17px; margin-bottom: 6px; }
+  .step .v { font-size: 19px; font-weight: 700; color: var(--red); margin-bottom: 8px; }
+  .step .v.b { color: var(--blue); }
+  .step p { font-size: 14px; line-height: 1.45; }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; background: #fff; }
+  th { background: #e2ddd6; color: #8c8780; font-weight: 600; text-align: left; padding: 9px 12px; }
+  td { border: 1px solid #d8d2ca; padding: 8px 12px; line-height: 1.35; vertical-align: top; }
+  td.n { text-align: right; width: 48px; }
+  tr.tot td { font-weight: 700; background: #f8f6f2; }
+  .fig { background: var(--beige); border-radius: 8px; padding: 14px; }
+  .cap { font-size: 13.5px; color: #555; line-height: 1.5; margin-top: 10px; }
+  .side h4 { color: var(--red); font-size: 21px; font-weight: 700; margin: 0 0 6px; }
+  .side p { font-size: 15.5px; line-height: 1.5; margin-bottom: 14px; }
+  .mono { font-family: "DejaVu Sans Mono", monospace; font-size: 13px; background: #fff; border: 1px solid var(--line);
+          border-radius: 4px; padding: 6px 8px; display: block; margin: 4px 0 6px; }
+  .bluebox { background: var(--bluebg); border-radius: 8px; padding: 16px 20px; }
+  .bluebox h4 { color: var(--blue); font-size: 21px; font-weight: 700; margin-bottom: 6px; }
+  .bluebox p { font-size: 15px; line-height: 1.5; margin: 0; }
+  .bluebox p + p { margin-top: 6px; }
+  .banner { background: var(--deep); color: #fff; border-radius: 8px; padding: 22px 26px; margin-top: 24px; }
+  .banner h3 { font-size: 27px; font-weight: 600; margin-bottom: 10px; }
+  .banner p { font-size: 15.5px; line-height: 1.5; color: #f1c9c3; }
+  .tag { display: inline-block; font-size: 12px; font-weight: 700; color: #fff; background: var(--red);
+         border-radius: 3px; padding: 1px 7px; margin-left: 6px; vertical-align: 2px; }
+  /* title slide */
+  .title { background: var(--deep); color: #fff; padding: 160px 72px 0; }
+  .title .kick { font-size: 20px; font-weight: 600; opacity: .9; margin-bottom: 22px; }
+  .title h1 { font-size: 64px; font-weight: 700; line-height: 1.12; letter-spacing: -0.5px; max-width: 1050px; margin-bottom: 26px; }
+  .title .sub { font-size: 27px; line-height: 1.45; max-width: 960px; opacity: .95; }
+  .title .foot { color: #f1d2cd; }
+</style>
+</head>
+<body>
+
+<!-- ============ Title ============ -->
+<section class="slide title">
+  <div class="kick">Intuitive Physics · Study Plan</div>
+  <h1>Do world models make human&#8209;like physics errors?</h1>
+  <div class="sub">Classic naive-physics paradigms and pendulum stimuli for humans, video world models and a VLM</div>
+  <div class="foot"><span>Jérémie ROBIN</span><span>AI Psychophysics GBE4018 · Sungkyunkwan University</span></div>
+</section>
+
+<!-- ============ 1 · Research question ============ -->
+<section class="slide">
+  <div class="bar"><i style="width:16.7%"></i></div>
+  <h2>1 · Research question</h2>
+  <p class="lead">Do video world models get motion wrong in the <b>same way humans do</b>, and do their errors shrink when they <b>see motion instead of a still frame</b>, as people's do?</p>
+  <div class="row">
+    <div class="card"><h3>H1–H3 · Classic biases</h3>
+      <p>From a single frame, models keep the tube's curve after the exit (impetus) and drop objects too straight from a moving trolley. A short clip shrinks the bias, as watching motion does for humans.</p></div>
+    <div class="card"><h3>H4–H5 · Pendulum laws</h3>
+      <p>Bob size should not change the period; a "heavier swings faster" belief would. Period should grow as √L; we expect a shallower slope, worst at an untrained length.</p></div>
+    <div class="card"><h3>H6–H8 · Alignment, chaos</h3>
+      <p>Model errors match human errors below the human–human ceiling, except on bias items. On the chaotic double pendulum samples are over-confident. Models judge straight exits better than they generate them.</p></div>
+    <div class="card"><h3>Agents compared</h3>
+      <p>Human volunteers · V-JEPA 2 (surprise score) · LTX-Video 2B and Wan 2.2 5B (generation) · Qwen2.5-VL-7B (static diagrams)</p></div>
+  </div>
+  <div class="foot"><span>Jérémie ROBIN · AI Psychophysics · Sungkyunkwan University</span><span>1 / 6</span></div>
+</section>
+
+<!-- ============ 2 · Item time course ============ -->
+<section class="slide">
+  <div class="bar"><i style="width:33.3%"></i></div>
+  <h2>2 · Item time course</h2>
+  <div class="row" style="gap:12px">
+    <div class="card step" style="flex:1.1"><h3>Context</h3><div class="v">1.5–3.5 s</div>
+      <p>Ball moves up to the critical moment: tube exit, release, cut</p></div>
+    <div class="card step"><h3>Single frame</h3><div class="v">1 frame</div>
+      <p>The critical frame alone; no velocity information</p></div>
+    <div class="card step"><h3>Short clip</h3><div class="v">+ 2 frames</div>
+      <p>The context clip, 2 frames past the critical moment</p></div>
+    <div class="card step" style="flex:1.2"><h3>Continuation</h3><div class="v">3–6 s total</div>
+      <p>Models generate it; for humans the ball goes behind a screen</p></div>
+    <div class="card step"><h3>Track</h3><div class="v b">16 fps</div>
+      <p>Red ball found by colour threshold</p></div>
+    <div class="card step" style="flex:1.1"><h3>Classify</h3><div class="v b">4 classes</div>
+      <p>Newtonian · noisy-Newton · human-like bias · non-human failure</p></div>
+  </div>
+  <div class="row" style="margin-top:22px">
+    <div class="panel beige"><h3>Humans</h3>
+      <p>Browser session, about 15 min. Pick the path from 4 drawn options (static), then click where the ball comes out from behind a screen (dynamic), then "which looks natural?" (2AFC). Static always first.</p></div>
+    <div class="panel blue"><h3>Video generators</h3>
+      <p>LTX-Video 2B and Wan 2.2 5B continue the single frame or the short clip, neutral prompt. 4 samples per item and mode, 16 for the double pendulum.</p></div>
+    <div class="panel blue"><h3>Judges</h3>
+      <p>No generation: V-JEPA 2 surprise and diffusion likelihood on correct vs anomalous clips. Qwen2.5-VL answers the 4-option diagram.</p></div>
+  </div>
+  <div class="foot"><span>Jérémie ROBIN · AI Psychophysics · Sungkyunkwan University</span><span>2 / 6</span></div>
+</section>
+
+<!-- ============ 3 · Stimuli and conditions ============ -->
+<section class="slide">
+  <div class="bar"><i style="width:50%"></i></div>
+  <h2 style="margin-bottom:18px">3 · Stimuli and conditions</h2>
+  <div class="row" style="gap:28px; align-items:flex-start">
+    <div style="flex:1.35">
+      <table>
+        <tr><th>Family</th><th>Event · factors</th><th>#</th></tr>
+        <tr><td>A1 Curved tube</td><td>straight, 90°, 180°, 270°, spiral × 2 speeds × 3 seeds</td><td class="n">30</td></tr>
+        <tr><td>A2 String snaps</td><td>4 release angles × 3 seeds</td><td class="n">12</td></tr>
+        <tr><td>A3 Pendulum cut</td><td>turning point, descending, bottom, ascending × 3</td><td class="n">12</td></tr>
+        <tr><td>B1 Trolley drop</td><td>4 speeds (incl. stopped) × 3 seeds</td><td class="n">12</td></tr>
+        <tr><td>C1 Pendulum</td><td>5 lengths (1 out of range) × small / big bob × 2</td><td class="n">20</td></tr>
+        <tr><td>D1 Double pendulum</td><td>low (regular) / high (chaotic) energy × 3 starts</td><td class="n">6</td></tr>
+        <tr class="tot"><td>Total</td><td>each with single-frame and short-clip conditioning</td><td class="n">92</td></tr>
+      </table>
+      <div class="row" style="margin-top:16px; gap:16px">
+        <div class="card" style="padding:14px 18px"><h3 style="font-size:17px;margin-bottom:4px">Humans</h3>
+          <p style="font-size:14.5px">40–60 volunteers (30 minimum) · one 15-min session · jsPsych on GitHub Pages, data to OSF</p></div>
+        <div class="card" style="padding:14px 18px"><h3 style="font-size:17px;margin-bottom:4px">Each generative model</h3>
+          <p style="font-size:14.5px">92 items × 2 modes × <b>4 samples</b> + D1 extra ≈ <b>900 clips</b></p></div>
+      </div>
+    </div>
+    <div style="flex:1">
+      <div class="fig"><img src="fig_tube.svg" style="width:100%; display:block"></div>
+      <p class="cap">Real item A1, 180° tube, drawn from its data file: correct straight exit (red) vs the impetus error (dashed blue). 480 × 320 px, 16 fps, exact physics. 2D for humans; a Blender 3D copy of A1, A3, B1, C1 for the models, with identical ball positions.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Jérémie ROBIN · AI Psychophysics · Sungkyunkwan University</span><span>3 / 6</span></div>
+</section>
+
+<!-- ============ 4 · Readouts and error taxonomy ============ -->
+<section class="slide">
+  <div class="bar"><i style="width:66.7%"></i></div>
+  <h2 style="margin-bottom:14px">4 · Readouts and error taxonomy</h2>
+  <div class="row" style="gap:30px; align-items:flex-start">
+    <div style="flex:1.12">
+      <img src="fig_curves.svg" style="width:100%; display:block">
+      <p class="cap" style="font-style:italic; margin-top:4px">Illustrative curves, not data. Predictions H1 and H2 for the curved tube.</p>
+    </div>
+    <div class="side" style="flex:1">
+      <h4>Axes and data</h4>
+      <p><b>x:</b> tube shape, 5 levels · <b>y:</b> share of paths coded as still curving (McCloskey coding), from signed post-exit curvature κ · one line per agent × conditioning</p>
+      <h4>Fit</h4>
+      <p style="margin-bottom:12px"><span class="mono">κ ~ agent × conditioning × tube × speed + (1|item)</span>
+        Bootstrap CIs over items · item-level human–model error correlation vs split-half human ceiling</p>
+      <div class="bluebox"><h4>Error taxonomy</h4>
+        <p>For each model × item, compare sample likelihood under noisy-Newton, noisy-Newton + human bias, and non-physical failure (freeze, vanish, stereotyped motion). Report the share each explains best.</p>
+        <p>Same logic for C1 (period ratio big / small bob, log–log slope vs L) and D1 (CRPS, spread–skill vs a 50-run noisy-Newton ensemble).</p></div>
+    </div>
+  </div>
+  <div class="foot"><span>Jérémie ROBIN · AI Psychophysics · Sungkyunkwan University</span><span>4 / 6</span></div>
+</section>
+
+<!-- ============ 5 · Expected outcome ============ -->
+<section class="slide">
+  <div class="bar"><i style="width:83.3%"></i></div>
+  <h2>5 · Expected outcome</h2>
+  <div class="row">
+    <div class="card"><h3>Humans</h3>
+      <p>Impetus and straight-down errors on the static diagrams, as in McCloskey et al. (1980).</p>
+      <p>Much closer to Newton when watching the clip: the <b>static / dynamic dissociation</b>.</p></div>
+    <div class="card"><h3>Video world models</h3>
+      <p>Curve after the exit from a single frame (H1); bob size shifts the period (H4).</p>
+      <p>Open question: does the short clip remove the bias (H2), or does the learned prior beat the evidence?</p></div>
+    <div class="card"><h3>Judges and VLM</h3>
+      <p>V-JEPA 2 and diffusion likelihood pick the straight path more often than generators draw it (H8).</p>
+      <p>The VLM on diagrams completes the "reasoning" corner of the comparison.</p></div>
+  </div>
+  <div class="banner">
+    <h3>Same stimuli, same tracker, same four error classes for every agent.</h3>
+    <p>If a model's errors fall in the human-like bias class, it learned the same visual prior people did. If they are non-human failures, human-level accuracy hides different strategies (cf. Li et al., ECCV 2026). Either way the taxonomy shows where it fails: physics, noise, prior or plain breakdown.</p>
+  </div>
+  <div class="foot"><span>Jérémie ROBIN · AI Psychophysics · Sungkyunkwan University</span><span>5 / 6</span></div>
+</section>
+
+<!-- ============ 6 · Pilot, cost and timeline ============ -->
+<section class="slide">
+  <div class="bar"><i style="width:100%"></i></div>
+  <h2>6 · Pilot, cost and timeline</h2>
+  <div class="row" style="gap:14px">
+    <div class="card step"><h3>1 · Stimuli <span class="tag">done</span></h3><div class="v">92 items</div>
+      <p>2D generator with exact physics, plus a Blender script for the 3D copies</p></div>
+    <div class="card step"><h3>2 · Pilot runs</h3><div class="v b">Kaggle, free</div>
+      <p>V-JEPA 2 surprise; LTX single frame vs clip, 4 samples (≈ 240 clips); time Wan 5B on a T4</p></div>
+    <div class="card step"><h3>3 · Track and plot</h3><div class="v">own computer</div>
+      <p>Curvature after the exit, pendulum period, first plots</p></div>
+    <div class="card step" style="flex:1.3"><h3>4 · Go / no-go</h3><div class="v">any one of 3</div>
+      <p>Model curves more than the straight-tube control, or bob size shifts period by &gt; 5 %, or errors are clearly non-human</p></div>
+  </div>
+  <div class="row" style="margin-top:22px">
+    <div class="panel beige"><h3>Cost: €0–20</h3>
+      <p>Own computer plus free Kaggle GPUs (about 30 h a week). The €20 reserve buys ≈ 35–40 h of a rented RTX 4090 if Wan 5B is too slow. Human study: volunteers, free hosting.</p></div>
+    <div class="panel blue"><h3>Timeline</h3>
+      <p>Pilot by early November 2026 · pre-registration and human study Nov–Dec · full model runs Nov–Jan · short paper for CogSci 2027 (Feb), full paper for NeurIPS 2027 (May).</p></div>
+    <div class="panel blue"><h3>Main risk</h3>
+      <p>Li et al. (ECCV 2026) already show "human accuracy, non-human errors". Move fast and lead with the bias paradigms and generated trajectories, which nobody has tested.</p></div>
+  </div>
+  <div class="foot"><span>Jérémie ROBIN · AI Psychophysics · Sungkyunkwan University</span><span>6 / 6</span></div>
+</section>
+
+</body>
+</html>
