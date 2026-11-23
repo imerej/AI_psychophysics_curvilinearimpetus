@@ -50,7 +50,8 @@ for iid, m in SEL.items():
         orders.append(dict(text=C.vlm_question(order), labels=lab))
     vjv = []
     for view, desc in (("whole", "whole frame, padded square, 12 fps"), ("crop12", "512 px square at the exit, 12 fps"),
-                       ("crop24", "256 px square at the exit, 24 fps")):
+                       ("crop24", "256 px square at the exit, 24 fps"),
+                       ("whole6", "whole frame, 6 fps: the future runs 1.33 s past the input, so the paths separate")):
         row = {}
         for fut in ("correct", "impetus", "vanish", "reverse", "freeze"):
             p = os.path.join(vj, f"{iid}_{view}_{fut}.jpg")

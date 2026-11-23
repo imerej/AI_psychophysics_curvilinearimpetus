@@ -136,7 +136,7 @@ img.frame { width: 100%; height: auto; border-radius: 6px; display: block; backg
     <div class="about">
       <span class="eyebrow">World model · surprise</span><h2>V-JEPA 2 ViT-g</h2>
       <p>Gets 16-frame clips: 8 frames of context (top row) and 8 of a future (bottom row). We compare its surprise at the true future with the curving one. Vanish, reverse and freeze are impossible futures used as a sanity check.</p>
-      <div class="spec"><span class="chip">16 frames</span><span class="chip">256 × 256</span><span class="chip">3 views × 5 futures</span></div>
+      <div class="spec"><span class="chip">16 frames</span><span class="chip">256 × 256</span><span class="chip">4 views × 5 futures</span></div>
     </div>
     <div class="body">
       <div class="seg" id="viewSeg" role="group" aria-label="View"></div>
@@ -158,7 +158,7 @@ const D = /*DATA*/null;
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
 const LAB = {"curving": "curve", "no bias": "", "outward": "ok"};
-let cur = 0, order = 0, view = "crop24", timer = null;
+let cur = 0, order = 0, view = "whole6", timer = null;
 
 function seg(el, opts, active, onPick) {
   el.innerHTML = opts.map(([v, t]) => `<button type="button" data-v="${v}" aria-pressed="${v == active}">${esc(t)}</button>`).join("");

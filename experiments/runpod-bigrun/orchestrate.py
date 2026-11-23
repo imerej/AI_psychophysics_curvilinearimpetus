@@ -36,7 +36,7 @@ IMAGE = "runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04"   # only its 
 
 # stage: (what, units, est. hours on one A100 80GB incl. weight download, time limit on the pod, extra args)
 STAGES = {
-    "vjepa_g":  ("V-JEPA 2 ViT-g (1B): surprise, real vs curving future", "30 items x 5 futures x 3 views", 0.4, 1.0),
+    "vjepa_g":  ("V-JEPA 2 ViT-g (1B): surprise, real vs curving future", "30 items x 5 futures x 4 views", 0.5, 1.0),
     "ltx13b":   ("LTX-Video 13B: continue the 33-frame clip", "30 clips x 3 seeds = 90 videos", 3.0, 4.5),
     "vlm":      ("Qwen2.5-VL 72B (AWQ 4-bit): pick straight / left / right", "30 items x 3 option orders = 90 answers", 0.7, 1.5),
     "cosmos2b": ("Cosmos-Predict2 2B: continue from the still", "30 stills x 2 seeds = 60 videos", 2.5, 3.5),

@@ -6,7 +6,7 @@ One A100 80GB on Runpod's community cloud ($1.19/h), two runs, a hard budget of 
 
 | Run | Model | Gets | Output |
 |---|---|---|---|
-| 1 | V-JEPA 2 ViT-g (1B) | 16-frame clips: context + true / curving / 3 impossible futures, 3 views | `vjepa_probe.csv` (surprise per future) |
+| 1 | V-JEPA 2 ViT-g (1B) | 16-frame clips: context + true / curving / 3 impossible futures, 4 views (incl. a 6 fps one where the paths separate) | `vjepa_probe.csv` (surprise per future) |
 | 1 | Qwen2.5-VL 72B (AWQ 4-bit) | 4 frames over the last second + a 3-option question, 3 option orders | `answers.csv` |
 | 1 | LTX-Video 13B (0.9.7-dev) | last 33 frames of the clip, same prompt and seeds as the 2B run, 3 seeds | 90 mp4 |
 | 1 | Cosmos-Predict2 2B Video2World | the still before the exit, 2 seeds | 60 mp4 |
