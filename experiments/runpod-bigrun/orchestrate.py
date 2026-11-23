@@ -48,6 +48,9 @@ PRICE = 1.19                            # USD/h, A100 80GB PCIe community (catal
 
 
 def key():
+    """RUNPOD_API_KEY from the environment (set in the cloud environment's settings), else ~/.runpod/config.toml."""
+    if os.environ.get("RUNPOD_API_KEY"):
+        return os.environ["RUNPOD_API_KEY"]
     return re.search(r'api_key\s*=\s*"([^"]+)"', open(os.path.expanduser("~/.runpod/config.toml")).read()).group(1)
 
 
