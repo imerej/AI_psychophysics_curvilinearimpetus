@@ -46,7 +46,9 @@ python orchestrate.py start run1              # uploads code + stimuli, installs
 python orchestrate.py watch run1              # downloads results as stages end; enforces the caps; terminates
 ```
 
-Then `run2` the same way. Results land in `results/<stage>/` and are scored with `../pilot/analyze_v2.py`.
+Then `run2` the same way. Results land in `results/<stage>/`. Score everything with
+`python score_bigrun.py` (tracker + scene check as in the LTX 2B run, V-JEPA g per view next to ViT-L,
+VLM answers, Fisher test curved vs straight): writes `results/scored/summary.md`, `summary.csv`, `per_clip.csv`.
 
 ## Budget guard
 
