@@ -2,8 +2,11 @@
 For each item, 16-frame clips (8 context + 8 future) are built for five futures:
   correct (true straight exit), impetus (curving foil), and three impossible ones for calibration:
   vanish (ball erased after the exit), reverse (ball rolls back into the tube), freeze (ball stops dead).
-Three views of the same clip:
+Four views of the same clip:
   whole  : whole frame padded to a square, 12 fps (as in the first runs)
+  whole6 : whole frame padded to a square, 6 fps: the 8 future frames span 1.33 s after the input ends, so the
+           true and curving balls end a median 4.3 ball radii apart (vs 0.1-1.3 in the other views); on the
+           straight-tube items the ball has left the frame by the last 1-2 frames
   crop12 : 512 px square around the exit point, 12 fps, resized to 256
   crop24 : 256 px square around the exit point, 24 fps, native resolution
 Two scores per view: mean L1 error over all future tokens ("all") and over the tokens where the ball
@@ -47,7 +50,7 @@ def clip_idx(c, fps_step):
 def view(fr, idx, m, kind):
     """Returns (16, RES, RES, 3) uint8 and a function mapping image xy to RES-space xy."""
     H, W = fr.shape[1:3]; c = m["context_end_frame"]; ex, ey = m["ball_xy"][c]
-    if kind == "whole":
+    if kind in ("whole", "whole6"):
         side = max(H, W); ox, oy = (side - W) // 2, (side - H) // 2
         canvas = np.empty((16, side, side, 3), np.uint8); canvas[:] = np.median(fr[0, 0], axis=0).astype(np.uint8)
         canvas[:, oy:oy + H, ox:ox + W] = fr[idx]
@@ -83,7 +86,7 @@ def main():
     if not a.dry:
         import torch
         from transformers import AutoModel
-        vj = AutoModel.from_pretrained("facebook/vjepa2-vitl-fpc64-256", dtype=torch.float16).cuda().eval()
+        vj = AutoModel.from_pretrained(os.environ.get("VJEPA_MODEL", "facebook/vjepa2-vitl-fpc64-256"), dtype=torch.float16).cuda().eval()
         def surprise(clip, tok):
             x = (clip / 255.0 - MEAN) / STD
             x = torch.tensor(x, dtype=torch.float16).permute(0, 3, 1, 2)[None].cuda()   # (1, T, C, H, W)
@@ -98,7 +101,7 @@ def main():
     for iid, m in sorted(items.items()):
         if not m.get("anomalous_impetus_xy"): continue
         c = m["context_end_frame"]; F = futures(m); step24 = max(1, round(m["fps"] / 24))
-        for kind, step in (("whole", 2 * step24), ("crop12", 2 * step24), ("crop24", step24)):
+        for kind, step in (("whole", 2 * step24), ("crop12", 2 * step24), ("crop24", step24), ("whole6", 4 * step24)):
             idx = clip_idx(c, step)
             if idx[0] < 0 or idx[-1] >= len(F["correct"]): continue
             _, to_res = view(F["correct"], idx, m, kind)
