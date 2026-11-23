@@ -31,7 +31,10 @@ STIM = os.environ.get("STIM_DIR", os.path.join(HERE, "stim3d"))     # v2 renders
 SRC = {"src/analyze.py": "analyze.py", "src/pilot/analyze_v2.py": "pilot/analyze_v2.py",
        "src/pilot/v2/vjepa2/vjepa_probe.py": "pilot/v2/vjepa2/vjepa_probe.py"}
 TOTAL_CAP = 28.0                       # USD over both runs; leaves $2 of the $30 untouched
-GPUS = ["NVIDIA A100 80GB PCIe", "NVIDIA A100-SXM4-80GB"]      # community cloud, cheapest first
+GPUS = ["NVIDIA A100 80GB PCIe", "NVIDIA A100-SXM4-80GB",     # community cloud, cheapest first
+        "NVIDIA RTX PRO 6000 Blackwell Server Edition",        # 96 GB, $1.69/h: fallback when no A100 is free
+        "NVIDIA H100 PCIe", "NVIDIA H100 80GB HBM3"]
+SECURE_GPUS = ["NVIDIA A100 80GB PCIe", "NVIDIA A100-SXM4-80GB"]    # secure cloud ($2.09/h) when community has none
 IMAGE = "runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04"   # only its system Python is used; venvs bring torch
 # the venvs get torch 2.14/2.15 (vLLM 0.34 pins 2.14), whose wheels are built for CUDA 13: only hosts whose driver
 # supports CUDA 13 can run them, so the pod is only rented on such a host (else torch silently falls back to the CPU)
@@ -45,8 +48,12 @@ STAGES = {
     "cosmos2b": ("Cosmos-Predict2 2B: continue from the still", "30 stills x 2 seeds = 60 videos", 2.5, 3.5),
     "wan22":    ("Wan 2.2 I2V A14B, 480p: continue from the still", "30 stills x 1 seed = 30 videos", 4.0, 6.0),
 }
-RUNS = {"run1": dict(stages=["vjepa_g", "vlm", "ltx13b", "cosmos2b"], setup_h=0.4, cap=14.0, disk=220),
-        "run2": dict(stages=["wan22"], setup_h=0.3, cap=12.0, disk=150)}
+# caps raised 23 Nov (run1 14 -> 16, run2 12 -> 11, total still <= 28): community had no A100 at launch time, so
+# run1 may run on secure cloud at $2.09/h (~7.1 h ~ $14.8)
+RUNS = {"run1": dict(stages=["vjepa_g", "vlm", "ltx13b", "cosmos2b"], setup_h=0.4, cap=16.0, disk=220),
+        "run2": dict(stages=["wan22"], setup_h=0.3, cap=11.0, disk=150),
+        # both runs on one pod: one proxy host to allow instead of two, one setup instead of two
+        "all": dict(stages=["vjepa_g", "vlm", "ltx13b", "cosmos2b", "wan22"], setup_h=0.4, cap=26.5, disk=280)}
 PRICE = 1.19                            # USD/h, A100 80GB PCIe community (catalog, 23 Nov 2026); SXM is 1.39
 
 
@@ -86,7 +93,8 @@ def est(run):
 def plan():
     tot_h = tot_c = 0
     for run, R in RUNS.items():
-        h, c = est(run); tot_h += h; tot_c += c
+        h, c = est(run)
+        if run != "all": tot_h += h; tot_c += c
         print(f"\n{run}  (cap ${R['cap']:.0f}, pod disk {R['disk']} GB)  setup + downloads ~{R['setup_h']} h")
         for s in R["stages"]:
             what, units, eh, lim = STAGES[s]
@@ -110,8 +118,8 @@ def launch(run):
     srv = base64.b64encode(open(os.path.join(HERE, "pod", "server.py"), "rb").read()).decode()
     q = """mutation($i: PodFindAndDeployOnDemandInput) { podFindAndDeployOnDemand(input: $i) { id costPerHr machine { gpuDisplayName } } }"""
     last = None
-    for gpu in GPUS:
-        i = dict(cloudType="COMMUNITY", gpuCount=1, gpuTypeId=gpu, name=f"slide21-{run}", volumeInGb=RUNS[run]["disk"],
+    for cloud, gpu in [("COMMUNITY", g) for g in GPUS] + [("SECURE", g) for g in SECURE_GPUS]:
+        i = dict(cloudType=cloud, gpuCount=1, gpuTypeId=gpu, name=f"slide21-{run}", volumeInGb=RUNS[run]["disk"],
                  containerDiskInGb=30, minVcpuCount=8, allowedCudaVersions=CUDA_OK, minMemoryInGb=100, volumeMountPath="/workspace", ports="8000/http",
                  imageName=IMAGE,
                  dockerArgs="bash -c 'echo $SRV_B64 | base64 -d > /server.py && JOB_DIR=/workspace/job python3 /server.py'",
@@ -121,7 +129,7 @@ def launch(run):
             p = gq(q, {"i": i})["podFindAndDeployOnDemand"]
             if p: break
         except RuntimeError as e:
-            last = e; print("  no", gpu, "->", str(e)[:200])
+            last = e; print("  no", cloud, gpu, "->", str(e)[:120])
     else:
         sys.exit(f"no A100 80GB available right now ({last}); nothing launched")
     s["runs"][run] = dict(pod=p["id"], token=token, price=p["costPerHr"], gpu=p["machine"]["gpuDisplayName"],
