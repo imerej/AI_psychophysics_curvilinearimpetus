@@ -33,6 +33,9 @@ SRC = {"src/analyze.py": "analyze.py", "src/pilot/analyze_v2.py": "pilot/analyze
 TOTAL_CAP = 28.0                       # USD over both runs; leaves $2 of the $30 untouched
 GPUS = ["NVIDIA A100 80GB PCIe", "NVIDIA A100-SXM4-80GB"]      # community cloud, cheapest first
 IMAGE = "runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04"   # only its system Python is used; venvs bring torch
+# the venvs get torch 2.14/2.15 (vLLM 0.34 pins 2.14), whose wheels are built for CUDA 13: only hosts whose driver
+# supports CUDA 13 can run them, so the pod is only rented on such a host (else torch silently falls back to the CPU)
+CUDA_OK = ["13.0", "13.1", "13.2"]
 
 # stage: (what, units, est. hours on one A100 80GB incl. weight download, time limit on the pod, extra args)
 STAGES = {
@@ -109,7 +112,7 @@ def launch(run):
     last = None
     for gpu in GPUS:
         i = dict(cloudType="COMMUNITY", gpuCount=1, gpuTypeId=gpu, name=f"slide21-{run}", volumeInGb=RUNS[run]["disk"],
-                 containerDiskInGb=30, minVcpuCount=8, minMemoryInGb=100, volumeMountPath="/workspace", ports="8000/http",
+                 containerDiskInGb=30, minVcpuCount=8, allowedCudaVersions=CUDA_OK, minMemoryInGb=100, volumeMountPath="/workspace", ports="8000/http",
                  imageName=IMAGE,
                  dockerArgs="bash -c 'echo $SRV_B64 | base64 -d > /server.py && JOB_DIR=/workspace/job python3 /server.py'",
                  env=[dict(key="SRV_B64", value=srv), dict(key="JOB_TOKEN", value=token)]
