@@ -1,0 +1,221 @@
+<title>Big-run model inputs</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one column lab sheet; an item picker on top, then one block per model showing its exact input. */
+:root {
+  --bg: #f5f6f8; --surface: #ffffff; --ink: #17202a; --muted: #5a6573; --line: #dadfe6;
+  --accent: #2459b8; --accent-soft: #e5edfa; --curve: #c4501a; --curve-soft: #fbeae1; --ok: #2f7d4f; --ok-soft: #e3f2e8;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11151a; --surface: #192028; --ink: #e5eaf0; --muted: #98a4b1; --line: #2b343e;
+  --accent: #7aa7ff; --accent-soft: #1f2c45; --curve: #ff8f5a; --curve-soft: #3a2419; --ok: #6fcf97; --ok-soft: #1b3326; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #11151a; --surface: #192028; --ink: #e5eaf0; --muted: #98a4b1; --line: #2b343e;
+  --accent: #7aa7ff; --accent-soft: #1f2c45; --curve: #ff8f5a; --curve-soft: #3a2419; --ok: #6fcf97; --ok-soft: #1b3326; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); }
+.wrap { max-width: 1080px; margin: 0 auto; padding-block: 28px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 28px; }
+h1 { font-size: 1.75rem; font-weight: 600; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+h2 { font-size: 1.15rem; font-weight: 600; margin: 0; }
+p { margin: 0; max-width: 68ch; }
+.lede { color: var(--muted); }
+.mono { font-family: var(--mono); font-size: 0.86em; }
+.eyebrow { font: 500 0.72rem var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+header { display: flex; flex-direction: column; gap: 10px; }
+.picker { display: flex; flex-wrap: wrap; gap: 8px; }
+.picker button, .seg button { font: 500 0.9rem var(--sans); color: var(--ink); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+.picker button[aria-pressed="true"], .seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1px; background: var(--line);
+  border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.facts div { background: var(--surface); padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.facts b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.facts small { color: var(--muted); font-size: 0.8rem; }
+section.model { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px;
+  display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 20px; }
+.model .about { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.model .about p { font-size: 0.9rem; color: var(--muted); }
+.model .body { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.spec { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 0.76rem var(--mono); padding: 2px 8px; border-radius: 6px; background: var(--accent-soft); color: var(--ink); }
+.chip.curve { background: var(--curve-soft); color: var(--curve); }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+figure { margin: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+figcaption { font-size: 0.8rem; color: var(--muted); }
+img.frame { width: 100%; height: auto; border-radius: 6px; display: block; background: var(--line); }
+.player { display: flex; flex-direction: column; gap: 8px; max-width: 640px; }
+.controls { display: flex; align-items: center; gap: 10px; }
+.controls button { font: 500 0.85rem var(--sans); border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+  border-radius: 6px; padding: 4px 12px; cursor: pointer; min-width: 64px; }
+.controls input { flex: 1; min-width: 0; accent-color: var(--accent); }
+.controls .mono { color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.prompt { font: 0.84rem/1.5 var(--mono); background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+  padding: 10px 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.prompt .lbl { display: block; font-family: var(--sans); font-weight: 600; font-size: 0.75rem; color: var(--muted);
+  letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; }
+.quad { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.map { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 0.85rem; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.strips { display: flex; flex-direction: column; gap: 12px; }
+.strip-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 0.82rem; }
+.strip-head b { font-weight: 600; }
+.thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+.thumbs figure { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px; }
+.thumbs figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 6px; font: 0.72rem var(--mono); }
+.note { font-size: 0.85rem; color: var(--muted); }
+@media (max-width: 760px) {
+  section.model { grid-template-columns: minmax(0, 1fr); padding: 16px; }
+  .quad { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Slide 21 · big run on Runpod · before launch</span>
+    <h1>What each model receives</h1>
+    <p class="lede">Every picture and every line of text below is built by the same functions the run uses, so this is the exact input, only shown smaller on screen. Pick an item; the five models' inputs for it follow. All 30 stills are at the bottom.</p>
+  </header>
+
+  <div class="picker" id="picker" role="group" aria-label="Item"></div>
+  <div class="facts" id="facts"></div>
+
+  <section class="model">
+    <div class="about">
+      <span class="eyebrow">Video generator · clip</span><h2>LTX-Video 13B</h2>
+      <p>Gets the last 33 frames of the clip and continues it for 48 more frames. 3 seeds per item.</p>
+      <div class="spec"><span class="chip">33 frames</span><span class="chip">768 × 512</span><span class="chip">24 fps</span></div>
+    </div>
+    <div class="body">
+      <div class="player">
+        <img class="frame" id="ltxImg" alt="LTX conditioning frame">
+        <div class="controls">
+          <button id="ltxPlay" type="button">Play</button>
+          <input id="ltxSlider" type="range" min="0" max="32" value="32" aria-label="Frame">
+          <span class="mono" id="ltxLabel"></span>
+        </div>
+      </div>
+      <div class="prompt"><span class="lbl">Prompt (same wording as the LTX 2B run)</span><span id="ltxPrompt"></span></div>
+      <div class="prompt"><span class="lbl">Negative prompt</span><span id="ltxNeg"></span></div>
+    </div>
+  </section>
+
+  <section class="model">
+    <div class="about">
+      <span class="eyebrow">Video generators · still</span><h2>Wan 2.2 A14B and Cosmos-Predict2 2B</h2>
+      <p>Both get one picture: the last frame before the exit. Wan makes 49 frames at 16 fps (1 seed), Cosmos 93 frames at 16 fps (2 seeds).</p>
+      <div class="spec"><span class="chip">Wan 768 × 512</span><span class="chip">Cosmos 1056 × 704</span></div>
+    </div>
+    <div class="body">
+      <figure><img class="frame" id="still" alt="Still given to Wan and Cosmos"><figcaption>Shown at Wan's 768 × 512. Cosmos gets the same picture scaled up to 1056 × 704 (its native height).</figcaption></figure>
+      <div class="prompt"><span class="lbl">Prompt (no direction given)</span><span id="stillPrompt"></span></div>
+      <div class="prompt"><span class="lbl">Negative prompt</span><span id="stillNeg"></span></div>
+    </div>
+  </section>
+
+  <section class="model">
+    <div class="about">
+      <span class="eyebrow">Vision-language model</span><h2>Qwen2.5-VL 72B</h2>
+      <p>Gets 4 frames spanning the last second, in order, then one multiple-choice question. Each item is asked 3 times with the options rotated, so no answer is always "A".</p>
+      <div class="spec"><span class="chip">4 frames</span><span class="chip">768 × 512</span><span class="chip">temperature 0</span></div>
+    </div>
+    <div class="body">
+      <div class="quad" id="vlmFrames"></div>
+      <div class="seg" id="orderSeg" role="group" aria-label="Option order"></div>
+      <div class="prompt"><span class="lbl">Question sent with the 4 images</span><span id="vlmQ"></span></div>
+      <div class="map" id="vlmMap"></div>
+    </div>
+  </section>
+
+  <section class="model">
+    <div class="about">
+      <span class="eyebrow">World model · surprise</span><h2>V-JEPA 2 ViT-g</h2>
+      <p>Gets 16-frame clips: 8 frames of context (top row) and 8 of a future (bottom row). We compare its surprise at the true future with the curving one. Vanish, reverse and freeze are impossible futures used as a sanity check.</p>
+      <div class="spec"><span class="chip">16 frames</span><span class="chip">256 × 256</span><span class="chip">3 views × 5 futures</span></div>
+    </div>
+    <div class="body">
+      <div class="seg" id="viewSeg" role="group" aria-label="View"></div>
+      <p class="note" id="viewDesc"></p>
+      <div class="strips" id="strips"></div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:12px">
+    <span class="eyebrow">All <span id="nAll"></span> items · the still Wan and Cosmos receive</span>
+    <h2>Every still, with the side its tube bends at the exit</h2>
+    <p class="note">The side is what the scoring counts as "curving": a ball that turns that way after the exit keeps the tube's curve.</p>
+    <div class="thumbs" id="thumbs"></div>
+  </section>
+</div>
+
+<script>
+const D = /*DATA*/null;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const LAB = {"curving": "curve", "no bias": "", "outward": "ok"};
+let cur = 0, order = 0, view = "crop24", timer = null;
+
+function seg(el, opts, active, onPick) {
+  el.innerHTML = opts.map(([v, t]) => `<button type="button" data-v="${v}" aria-pressed="${v == active}">${esc(t)}</button>`).join("");
+  el.querySelectorAll("button").forEach(b => b.onclick = () => onPick(b.dataset.v));
+}
+function showFrame(i) {
+  const it = D.items[cur]; $("ltxImg").src = it.ltx[i]; $("ltxSlider").value = i;
+  const f = it.ltx_first + +i;
+  $("ltxLabel").textContent = `frame ${f} · ${String(+i + 1).padStart(2, " ")}/33`;
+}
+function stop() { clearInterval(timer); timer = null; $("ltxPlay").textContent = "Play"; }
+$("ltxPlay").onclick = () => {
+  if (timer) return stop();
+  let i = +$("ltxSlider").value; if (i >= 32) i = 0;
+  $("ltxPlay").textContent = "Pause";
+  timer = setInterval(() => { showFrame(i); if (++i > 32) stop(); }, 1000 / 24);
+};
+$("ltxSlider").oninput = e => { stop(); showFrame(e.target.value); };
+
+function renderOrder() {
+  const it = D.items[cur], o = it.orders[order];
+  seg($("orderSeg"), [[0, "Order 1"], [1, "Order 2"], [2, "Order 3"]], order, v => { order = +v; renderOrder(); });
+  $("vlmQ").textContent = o.text;
+  $("vlmMap").innerHTML = "<span class='note'>Scored as:</span>" + Object.entries(o.labels)
+    .map(([L, l]) => `<span class="chip ${LAB[l]}">${L} = ${esc(l)}</span>`).join("");
+}
+function renderView() {
+  const it = D.items[cur], v = it.vjepa.find(x => x.view == view);
+  seg($("viewSeg"), it.vjepa.map(x => [x.view, x.view]), view, x => { view = x; renderView(); });
+  $("viewDesc").textContent = v.desc;
+  const NAME = {correct: "true future (straight)", impetus: "curving future", vanish: "ball vanishes", reverse: "ball rolls back", freeze: "ball freezes"};
+  $("strips").innerHTML = Object.entries(v.futs).map(([f, src]) => `<figure>
+      <div class="strip-head"><b>${esc(NAME[f] || f)}</b><span class="note">top: context · bottom: future</span></div>
+      <img class="frame" src="${src}" alt="${esc(f)} clip"></figure>`).join("");
+}
+function render() {
+  stop();
+  const it = D.items[cur];
+  seg($("picker"), D.items.map((x, i) => [i, x.name]), cur, v => { cur = +v; render(); });
+  const t = n => (n / it.fps).toFixed(2) + " s";
+  $("facts").innerHTML = [
+    ["Item", `<span class="mono">${esc(it.id)}</span>`, `speed ${it.speed} · ${it.fps} fps`],
+    ["Input stops at", `frame ${it.ctx_end} (${t(it.ctx_end)})`, `the ball is still inside the tube`],
+    ["Ball leaves the tube", `frame ${it.exit} (${t(it.exit)})`, `${it.lead_ms} ms after the last input frame`],
+    ["Exit direction", `towards the ${esc(it.direction)}`, `in the picture`],
+    ["Tube bends to the", `<span style="color:var(--curve)">${esc(it.side)}</span>`, it.shape == "straight" ? "straight tube: any bend counts as curving" : `so bending ${esc(it.side)} = curving`],
+  ].map(([k, v, s]) => `<div><span class="eyebrow">${k}</span><b>${v}</b><small>${s}</small></div>`).join("");
+  showFrame(32);
+  $("ltxPrompt").textContent = it.ltx_prompt; $("ltxNeg").textContent = D.meta.ltx_neg;
+  $("still").src = it.still; $("stillPrompt").textContent = D.meta.prompt_still; $("stillNeg").textContent = D.meta.neg_still;
+  $("vlmFrames").innerHTML = it.vlm.map((src, j) => `<figure><img class="frame" src="${src}" alt="VLM frame ${j + 1}">
+      <figcaption class="mono">${j + 1} · frame ${it.vlm_idx[j]} · t = ${((it.vlm_idx[j] - it.ctx_end) / it.fps).toFixed(2)} s</figcaption></figure>`).join("");
+  renderOrder(); renderView();
+}
+$("nAll").textContent = D.meta.n_items;
+$("thumbs").innerHTML = D.thumbs.map(t => `<figure><img class="frame" src="${t.src}" alt="${esc(t.id)}">
+  <figcaption><span>${esc(t.id.replace("A1_tube_", ""))}</span><span style="color:var(--curve)">${t.shape == "straight" ? "—" : "bends " + esc(t.side)}</span></figcaption></figure>`).join("");
+cur = Math.max(0, D.items.findIndex(x => x.shape == "c270"));
+render();
+</script>

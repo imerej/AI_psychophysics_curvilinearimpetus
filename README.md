@@ -37,6 +37,7 @@ Full numbers: [`experiments/pilot/v2/results_all/README.md`](experiments/pilot/v
 | Wan 2.2 I2V (A14B) | open video generator | RunPod A100/H100 | 🟡 script ready ([`experiments/runpod-wan/`](experiments/runpod-wan/)) |
 | Seedance (via fal.ai) | closed video generator | Kaggle notebook + API | 🟡 notebooks ready ([`experiments/pilot/v2/`](experiments/pilot/v2/)) |
 | Veo 3.1, Gemini image editing | closed | by hand | 🟡 prompts and frames ready ([`experiments/image-model-prompts/`](experiments/image-model-prompts/)) |
+| LTX-Video 13B, Wan 2.2, Cosmos-Predict2 2B, Qwen2.5-VL 72B, V-JEPA 2 ViT-g | open models, one big run | RunPod A100 80GB, $28 cap | 🟡 scripts ready, not launched ([`experiments/runpod-bigrun/`](experiments/runpod-bigrun/)) |
 | Humans | browser experiment | lab | 🟡 experiment built and tested, data collection next |
 
 ## Repository layout
@@ -53,6 +54,7 @@ experiments/
   results-kaggle-run1/    its results
   pilot/v2/               3D re-render, full LTX run, V-JEPA probe, Seedance/fal.ai notebooks, results
   runpod-wan/             Wan 2.2 on RunPod
+  runpod-bigrun/          five models in one budget-guarded RunPod run (+ input preview)
   image-model-prompts/    frames and prompts for Gemini / Veo
   human/                  browser experiments for participants + scoring
 ```

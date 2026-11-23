@@ -83,7 +83,7 @@ def main():
     if not a.dry:
         import torch
         from transformers import AutoModel
-        vj = AutoModel.from_pretrained("facebook/vjepa2-vitl-fpc64-256", dtype=torch.float16).cuda().eval()
+        vj = AutoModel.from_pretrained(os.environ.get("VJEPA_MODEL", "facebook/vjepa2-vitl-fpc64-256"), dtype=torch.float16).cuda().eval()
         def surprise(clip, tok):
             x = (clip / 255.0 - MEAN) / STD
             x = torch.tensor(x, dtype=torch.float16).permute(0, 3, 1, 2)[None].cuda()   # (1, T, C, H, W)
